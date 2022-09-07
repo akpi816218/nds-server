@@ -5,14 +5,15 @@
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 	</head>
-	<body>
-		<form action="/handle" method="get">
-			<input type="text" name="txt" id="txt"> <input type="submit" value="Submit">
+	<body style="font-family: monospace; margin: 0; padding: 0;">
+		<form action="/handle" method="get" style="display: block; position: sticky; top: 0; left: 0; width: calc(100vw - 10px); padding: 5px; background-color: white; font-size: 1.125em;">
+			<input type="text" name="txt" id="txt" style="margin: 0; padding: 2.5px; display: block; width: calc(100vw - 17.5px); font-size: 1.125em;">
+			<input type="submit" value="Submit" style="font-size: 1.125em; display: block; margin-top: 7.5px;">
+			<hr>
 		</form>
-		<hr>
-		<pre style="display: block; tab-size: 2;"></pre>
+		<pre style="display: block; tab-size: 2; padding-left: 1em;"></pre>
 		<script>
-			fetch('/api/getlog').then(res => res.text()).then((text) => {
+			fetch('/api/getlog/formatted').then(res => res.text()).then((text) => {
 				document.querySelector('pre').innerText = text;
 			});
 			document.querySelector('#txt').focus();

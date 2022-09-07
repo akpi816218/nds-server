@@ -101,7 +101,7 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-	res.sendFile(__dirname + '/form.html');
+	res.status(200).sendFile(__dirname + '/form.html');
 });
 
 app.get('/handle', (req, res) => {
@@ -112,13 +112,25 @@ app.get('/handle', (req, res) => {
 		}),
 		'./log.ndsf'
 	);
-	res.status(200);
-	res.redirect('/');
-	res.end();
+	res.status(200).redirect('/').end();
 });
 
-app.get('/api/getlog', (req, res) => {
-	res.send(GetSync(/[\s\S]*/, './log.ndsf'));
+app.get('/api/getlog/raw', (req, res) => {
+	res.status(200).send(GetSync(/[\s\S]*/, './log.ndsf')).end();
+});
+
+app.get('/api/getlog/formatted', (req, res) => {
+	let strData = [],
+		allData = GetSync(/[\s\S]*/, './log.ndsf');
+	allData.forEach((v) => {
+		strData.push(v.toString());
+	});
+	let str = format(`[${strData.join(',')}]`, {
+		parser: 'json-stringify',
+		tabWidth: 2,
+		useTabs: true,
+	});
+	res.status(200).end(str);
 });
 
 app.listen(8000);
