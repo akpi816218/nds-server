@@ -118,18 +118,7 @@ app.get('/handle', (req, res) => {
 });
 
 app.get('/api/getlog', (req, res) => {
-	let strData = [],
-		allData = GetSync(/[\s\S]*/, './log.ndsf');
-	allData.forEach((v) => {
-		strData.push(v.toString());
-	});
-	let str = format(`[${strData.join(',')}]`, {
-		parser: 'json-stringify',
-		singleAttributePerLine: true,
-		tabWidth: 2,
-		useTabs: true
-	});
-	res.send(str);
+	res.send(GetSync(/[\s\S]*/, './log.ndsf'));
 });
 
 app.listen(8000);
