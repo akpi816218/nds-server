@@ -10,11 +10,12 @@
 			<input type="text" name="txt" id="txt"> <input type="submit" value="Submit">
 		</form>
 		<hr>
-		<div></div>
+		<pre style="display: block; tab-size: 2;"></pre>
 		<script>
 			fetch('/api/getlog').then(res => res.text()).then((text) => {
-				document.querySelector('div').innerText = text;
+				document.querySelector('pre').innerText = text;
 			});
+			document.querySelector('#txt').focus();
 		</script>
 	</body>
 </html>

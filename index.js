@@ -80,7 +80,7 @@ const SetSync = (data = new NDSData(), file = '.ndsf') => {
 		file,
 		format(`[\n${allJson.join(',\n')}\n]`, {
 			parser: 'json-stringify',
-			useTabs: true,
+			useTabs: true
 		}),
 		{ encoding: 'utf-8' }
 	);
@@ -94,6 +94,11 @@ const app = express();
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+app.use((req, res, next) => {
+	console.log(`${req.method} request at ${req.originalUrl}`);
+	next();
+});
 
 app.get('/', (req, res) => {
 	res.sendFile(__dirname + '/form.html');
@@ -113,7 +118,18 @@ app.get('/handle', (req, res) => {
 });
 
 app.get('/api/getlog', (req, res) => {
-	res.send(GetSync(/[\s\S]*/, './log.ndsf'));
+	let strData = [],
+		allData = GetSync(/[\s\S]*/, './log.ndsf');
+	allData.forEach((v) => {
+		strData.push(v.toString());
+	});
+	let str = format(`[${strData.join(',')}]`, {
+		parser: 'json-stringify',
+		singleAttributePerLine: true,
+		tabWidth: 2,
+		useTabs: true
+	});
+	res.send(str);
 });
 
 app.listen(8000);
