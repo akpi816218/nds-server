@@ -1,22 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Server Test</title>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" href="data:," />
 	</head>
-	<body style="font-family: monospace; margin: 0; padding: 0;">
-		<form action="/handle" method="get" style="display: block; position: sticky; top: 0; left: 0; width: calc(100vw - 10px); padding: 5px; background-color: white; font-size: 1.125em;">
-			<input type="text" name="txt" id="txt" style="margin: 0; padding: 2.5px; display: block; width: calc(100vw - 17.5px); font-size: 1.125em;">
-			<input type="submit" value="Submit" style="font-size: 1.125em; display: block; margin-top: 7.5px;">
-			<hr>
+	<body
+		style="
+			font-family: monospace;
+			margin: 0;
+			padding: 0;
+			background-color: black;
+			color: white;
+		"
+	>
+		<form
+			action="/handle"
+			method="get"
+			style="
+				display: block;
+				position: sticky;
+				top: 0;
+				left: 0;
+				width: calc(100vw - 10px);
+				padding: 5px;
+				padding-bottom: 0;
+				font-size: 1.125em;
+				background-color: inherit;
+				border: none;
+			"
+		>
+			<input
+				type="text"
+				name="txt"
+				id="txt"
+				style="
+					margin: 0;
+					padding: 2.5px;
+					display: block;
+					width: calc(100vw - 17.5px);
+					font-size: 1.25em;
+					background-color: inherit;
+					border: 1px solid white;
+					border-radius: 5px;
+					color: inherit;
+					font-family: inherit;
+				"
+			/>
+			<input
+				type="submit"
+				value="Submit"
+				style="
+					font-size: 1.25em;
+					display: block;
+					margin-top: 10px;
+					font-family: inherit;
+					background-color: inherit;
+					color: inherit;
+					border: 1px solid white;
+					border-radius: 5px;
+				"
+			/>
+			<hr
+				style="margin: 0; margin-top: 10px; padding: 0; background-color: white"
+			/>
 		</form>
-		<pre style="display: block; tab-size: 2; padding-left: 1em;"></pre>
+		<pre
+			style="
+				display: block;
+				tab-size: 2;
+				padding-left: 1em;
+				font-size: 1.125em;
+				border: none;
+			"
+		></pre>
 		<script>
-			fetch('/api/getlog/formatted').then(res => res.text()).then((text) => {
-				document.querySelector('pre').innerText = text;
+			const txt = document.getElementById('txt');
+			fetch('/api/getlog/formatted')
+				.then((res) => res.text())
+				.then((text) => {
+					document.querySelector('pre').innerText = text;
+				});
+			txt.focus();
+			document.getElementById('form').addEventListener('submit', (e) => {
+				if (txt.value.toString().replace(/\s./gi, '') == '') {
+					e.preventDefault();
+					txt.value = '';
+					return;
+				}
 			});
-			document.querySelector('#txt').focus();
+			document.body.addEventListener('keypress', (e) => {
+				if (
+					e.key == 'Enter' &&
+					!e.metaKey &&
+					!e.ctrlKey &&
+					!e.shiftKey &&
+					!e.altKey
+				)
+					document.querySelector('form').submit();
+			});
 		</script>
 	</body>
 </html>

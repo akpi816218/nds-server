@@ -1,102 +1,28 @@
-//#region nds
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { format } from 'prettier';
-class NDSError extends Error {
-	constructor(message) {
-		super(message);
-		this.name = 'NDSError';
-	}
-	setCode(code) {
-		this.code = code;
-		return this;
-	}
-}
-class NDSData {
-	constructor(json) {
-		this.key = json.key;
-		this.value = json.value;
-	}
-	toJSONString() {
-		return JSON.stringify({
-			key: this.key,
-			value: this.value,
-		});
-	}
-	toString() {
-		return this.toJSONString();
-	}
-}
-const GetSync = (regexp = /[\s\S]*/, file = '.ndsf') => {
-	if (!(regexp instanceof RegExp))
-		throw new NDSError(`Invalid RegExp: ${regexp}`).setCode(101);
-	if (!existsSync(file) || !file.match(/\.ndsf$/))
-		throw new NDSError(`Invalid file: '${file}'`).setCode(201);
-	let allJson = [],
-		allData = [],
-		allHits = [],
-		json;
-	try {
-		json = JSON.parse(readFileSync(file, { encoding: 'utf-8' }));
-	} catch (e) {
-		throw new NDSError(`Content of ${file} is invalid JSON`).setCode(202);
-	}
-	for (let i in json) {
-		allJson.push(json[i]);
-	}
-
-	allJson.sort((a, b) => {
-		a = a.key.toString().toLowerCase();
-		b = b.key.toString().toLowerCase();
-		return a < b ? -1 : a > b ? 1 : 0;
-	});
-
-	allHits = allJson.filter((value) => {
-		return regexp.test(value.key) ? true : false;
-	});
-
-	allHits.forEach((value) => {
-		allData.push(new NDSData(value));
-	});
-
-	return allData;
-};
-const SetSync = (data = new NDSData(), file = '.ndsf') => {
-	if (!(data instanceof NDSData) || !data.key || !data.value)
-		throw new NDSError(`Invalid data: ${data}`).setCode(102);
-	if (!existsSync(file) || !file.match(/\.ndsf$/))
-		throw new NDSError(`Invalid file: '${file}'`).setCode(201);
-	let allJson = [],
-		allData = GetSync(/.*/i, file);
-	allData.push(data);
-	allData.forEach((value) => {
-		allJson.push(
-			format(value.toJSONString(), {
-				parser: 'json-stringify',
-				useTabs: true,
-			})
-		);
-	});
-	writeFileSync(
-		file,
-		format(`[\n${allJson.join(',\n')}\n]`, {
-			parser: 'json-stringify',
-			useTabs: true
-		}),
-		{ encoding: 'utf-8' }
-	);
-	return GetSync(/[\s\S]*/, file);
-};
-//#endregion nds
-
 import express from 'express';
 const app = express();
-
+import { readFileSync, writeFileSync } from 'fs';
+import { format } from 'prettier';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+const allowedPaths = [
+	'/',
+	'/api/getlog/formatted',
+	'/api/getlog/raw',
+	'/handle',
+];
+
 app.use((req, res, next) => {
-	console.log(`${req.method} request at ${req.originalUrl}`);
+	if (!allowedPaths.includes(req.originalUrl)) {
+		console.log(`ERROR 404 - ${req.ip} - ${req.method} ${req.originalUrl}`);
+		res
+			.status(404)
+			.send(`HTTP`)
+			.sendFile(__dirname + '/404.html');
+		return;
+	}
+	console.log(`${req.ip} - ${req.method} ${req.originalUrl}`);
 	next();
 });
 
@@ -105,30 +31,47 @@ app.get('/', (req, res) => {
 });
 
 app.get('/handle', (req, res) => {
-	SetSync(
-		new NDSData({
-			key: Date.now().toString(),
-			value: req.query.txt.toString(),
-		}),
-		'./log.ndsf'
-	);
-	res.status(200).redirect('/').end();
+	if (!req.query.txt) {
+		res.status(406).redirect('/').end();
+		return;
+	}
+	try {
+		let content = readFileSync('./log.ndsf')
+			.toString()
+			.replace('[', '')
+			.replace(']', '');
+		let text = '[' + content + `,"${req.query.txt.toString()}",]`;
+		text = format(text, {
+			parser: 'json-stringify',
+			tabWidth: 2,
+			useTabs: true,
+			trailingComma: 'none',
+		});
+		writeFileSync('./log.ndsf', text);
+		res.status(200).redirect('/').end();
+	} catch (e) {
+		res.status(406).redirect('/').end();
+	}
 });
 
 app.get('/api/getlog/raw', (req, res) => {
-	res.status(200).send(GetSync(/[\s\S]*/, './log.ndsf')).end();
+	res
+		.status(200)
+		.set('Content-Type', 'text/plain')
+		.send(
+			readFileSync('./log.ndsf', { encoding: 'utf-8' })
+			// .toString()
+			// .replace(/\s/g, '')
+		)
+		.end();
 });
 
 app.get('/api/getlog/formatted', (req, res) => {
-	let strData = [],
-		allData = GetSync(/[\s\S]*/, './log.ndsf');
-	allData.forEach((v) => {
-		strData.push(v.toString());
-	});
-	let str = format(`[${strData.join(',')}]`, {
+	let str = format(readFileSync('./log.ndsf').toString(), {
 		parser: 'json-stringify',
-		tabWidth: 2,
 		useTabs: true,
+		tabWidth: 2,
+		trailingComma: 'none',
 	});
 	res.status(200).end(str);
 });

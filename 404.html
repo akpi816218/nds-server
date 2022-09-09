@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" href="data:," />
+	</head>
+	<body
+		style="
+			font-family: monospace;
+			margin: 0;
+			padding: 1em;
+			background-color: black;
+			color: white;
+			text-align: center;
+			font-size: 2.5em;
+		"
+	>
+		<h1>HTTP ERROR 404:</h1>
+		<p>The requested URL <span style="font-weight: bold; text-decoration: underline; word-wrap: break-word;"></span> was not found on this server.</p>
+		<script>
+			document.querySelector('span').innerText =
+				window.location.pathname + window.location.search;
+		</script>
+	</body>
+</html>
