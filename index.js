@@ -11,6 +11,7 @@ const allowedPaths = [
 	'/api/getlog/formatted',
 	'/api/getlog/raw',
 	'/handle',
+	'/tmp',
 ];
 
 app.use((req, res, next) => {
@@ -45,7 +46,7 @@ app.get('/handle', (req, res) => {
 			parser: 'json-stringify',
 			tabWidth: 2,
 			useTabs: true,
-			trailingComma: 'none',
+			trailingComma: 'none'
 		});
 		writeFileSync('./log.ndsf', text);
 		res.status(200).redirect('/').end();
@@ -58,11 +59,7 @@ app.get('/api/getlog/raw', (req, res) => {
 	res
 		.status(200)
 		.set('Content-Type', 'text/plain')
-		.send(
-			readFileSync('./log.ndsf', { encoding: 'utf-8' })
-			// .toString()
-			// .replace(/\s/g, '')
-		)
+		.send(readFileSync('./log.ndsf', { encoding: 'utf-8' }))
 		.end();
 });
 
@@ -74,6 +71,11 @@ app.get('/api/getlog/formatted', (req, res) => {
 		trailingComma: 'none',
 	});
 	res.status(200).end(str);
+});
+
+// '/tmp' path is reserved for temporary stuff
+app.get('/tmp', (req, res) => {
+	res.status(200).end();
 });
 
 app.listen(8000);
