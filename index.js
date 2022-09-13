@@ -1,29 +1,35 @@
 import express from 'express';
 const app = express();
-import { readFileSync, writeFileSync } from 'fs';
+import { appendFileSync, readFileSync, writeFileSync } from 'fs';
 import { format } from 'prettier';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const allowedPaths = [
-	'/',
-	'/api/getlog/formatted',
-	'/api/getlog/raw',
-	'/handle',
-	'/tmp',
-];
+const allowed = {
+	paths: [
+		'/',
+		'/api/getlog/formatted',
+		'/api/getlog/raw',
+		'/handle',
+		'/tmp'
+	],
+	methods: [
+		'GET'
+	],
+};
 
 app.use((req, res, next) => {
-	if (!allowedPaths.includes(req.originalUrl)) {
-		console.log(`ERROR 404 - ${req.ip} - ${req.method} ${req.originalUrl}`);
+	if (!allowed.paths.includes(req.path) || !allowed.methods.includes(req.method)) {
+		appendFileSync('server.log', `\nERROR 404 - ${req.ip} - ${req.method} ${req.path}`);
 		res
 			.status(404)
-			.send(`HTTP`)
-			.sendFile(__dirname + '/404.html');
+			.send(`HTTP ERROR 404:
+Cannot ${req.method} '${req.path}'
+`)
 		return;
 	}
-	console.log(`${req.ip} - ${req.method} ${req.originalUrl}`);
+	console.log(`${req.ip} - ${req.method} ${req.path}`);
 	next();
 });
 
@@ -46,12 +52,12 @@ app.get('/handle', (req, res) => {
 			parser: 'json-stringify',
 			tabWidth: 2,
 			useTabs: true,
-			trailingComma: 'none'
+			trailingComma: 'none',
 		});
 		writeFileSync('./log.ndsf', text);
-		res.status(200).redirect('/').end();
+		res.status(200).redirect('/');
 	} catch (e) {
-		res.status(406).redirect('/').end();
+		res.status(406).redirect('/');
 	}
 });
 
@@ -79,3 +85,4 @@ app.get('/tmp', (req, res) => {
 });
 
 app.listen(8000);
+console.log('Listening at port 8000')
